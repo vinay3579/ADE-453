@@ -51,16 +51,23 @@ To_Bucket_Secret_Key="$7"
 SOURCEFILES=()
 DESTINATIONFILES=()
 
-while IFS=" " read -r src dest
+
+		
+regex='(.*) >> (.*)'
+while IFS= read -r line dest
 do 
-	
-	if [ "$src" != "" ]; then
-		SOURCEFILES+=("$src")
-	fi
-	if [ "$dest" != "" ]; then	
-		DESTINATIONFILES+=("$dest")
-	fi	
-done < $TransferDescriptor
+    [[ $line =~ $regex ]] || continue
+    src=${BASH_REMATCH[1]}
+    dest=${BASH_REMATCH[2]}
+
+    if [[ -n $src ]]; then
+        SOURCEFILES+=("$src")
+    fi
+    if [[ -n $dest ]]; then  
+        DESTINATIONFILES+=("$dest")
+    fi  
+done < "$TransferDescriptor"		
+		
 
 	
 # check if there are equal number of source and destination files
@@ -76,8 +83,6 @@ fi
 for((i=0;i<${#SOURCEFILES[@]};i++));
 do
 SOURCEFILES[i]="s3://""${From_Bucket}/""${SOURCEFILES[i]}"
-SOURCEFILES1[i]="s3://""${From_Bucket}/""${SOURCEFILES[i]}"
-
 done
 
 for((i=0;i<${#DESTINATIONFILES[@]};i++));
@@ -117,7 +122,7 @@ do
 	
 	
 	
-	temp=$(AWS_ACCESS_KEY_ID="${From_Bucket_Access_Key}" AWS_SECRET_ACCESS_KEY="${From_Bucket_Secret_Key}" aws s3 ls "${SOURCEFILESTBCHKD[i]}" | wc -l )
+	temp=$(AWS_ACCESS_KEY_ID="${From_Bucket_Access_Key}" AWS_SECRET_ACCESS_KEY="${From_Bucket_Secret_Key}" /usr/local/bin/aws s3 ls "${SOURCEFILESTBCHKD[i]}" | wc -l )
 	  
 	if [[ "$temp" -eq 0 ]];
 		then
@@ -151,7 +156,7 @@ do
 	#echo "echoing aws s3 cp ""${FPSOURCEFILES[i]}" "/tmp/BashPlayArea2/""${FPSOURCEFILES[i]}"
 	
 	#aws s3 cp "${FPSOURCEFILES[i]}" "/tmp/BashPlayArea2/""${SOURCEFILES1[i]}" --profile From_Bucket_Cdn
-	AWS_ACCESS_KEY_ID="${From_Bucket_Access_Key}" AWS_SECRET_ACCESS_KEY="${From_Bucket_Secret_Key}"	aws s3 cp "${FPSOURCEFILES[i]}" "/tmp/BashPlayArea2/""${SOURCEFILES[i]}" 
+	AWS_ACCESS_KEY_ID="${From_Bucket_Access_Key}" AWS_SECRET_ACCESS_KEY="${From_Bucket_Secret_Key}"	/usr/local/bin/aws s3 cp "${FPSOURCEFILES[i]}" "/tmp/BashPlayArea2/""${SOURCEFILES[i]}" 
 	
 done	
 
@@ -162,7 +167,7 @@ done
 for (( i=0 ;i<${#FPDESTINATIONFILES[@]};i++));  
 do
 	
-	AWS_ACCESS_KEY_ID="${To_Bucket_Access_Key}" AWS_SECRET_ACCESS_KEY="${To_Bucket_Secret_Key}" aws s3 cp "/tmp/BashPlayArea2/""${FPSOURCEFILES[i]}" "s3://""${To_Bucket}/""${FPDESTINATIONFILES[i]}" 
+	AWS_ACCESS_KEY_ID="${To_Bucket_Access_Key}" AWS_SECRET_ACCESS_KEY="${To_Bucket_Secret_Key}" /usr/local/bin/aws s3 cp "/tmp/BashPlayArea2/""${FPSOURCEFILES[i]}" "s3://""${To_Bucket}/""${FPDESTINATIONFILES[i]}" 
 done	
 
 #transfer from local to 'backup' at destination  
@@ -171,7 +176,7 @@ done
 for (( i=0 ;i<${#FPDESTINATIONFILES[@]};i++));  
 do
 	
-	AWS_ACCESS_KEY_ID="${To_Bucket_Access_Key}" AWS_SECRET_ACCESS_KEY="${To_Bucket_Secret_Key}" aws s3 cp "/tmp/BashPlayArea2/""${FPSOURCEFILES[i]}" "s3://""${To_Bucket}/""$(date +'%Y_%m_%d')/""${FPDESTINATIONFILES[i]}"
+	AWS_ACCESS_KEY_ID="${To_Bucket_Access_Key}" AWS_SECRET_ACCESS_KEY="${To_Bucket_Secret_Key}" /usr/local/bin/aws s3 cp "/tmp/BashPlayArea2/""${FPSOURCEFILES[i]}" "s3://""${To_Bucket}/""$(date +'%Y_%m_%d')/""${FPDESTINATIONFILES[i]}"
 	
 done
 
@@ -188,7 +193,7 @@ do
 	
 	#AWS_ACCESS_KEY_ID="${To_Bucket_Access_Key}" AWS_SECRET_ACCESS_KEY="${To_Bucket_Secret_Key}" aws s3 cp "/tmp/BashPlayArea2/""${FPSOURCEFILES[i]}" "s3://""${To_Bucket}/""$(date +'%Y_%m_%d')/""${FPDESTINATIONFILES[i]}"
 	
-	temp=$(AWS_ACCESS_KEY_ID="${From_Bucket_Access_Key}" AWS_SECRET_ACCESS_KEY="${From_Bucket_Secret_Key}" aws s3 ls "${FPSOURCEFILES[i]}" | wc -l )
+	temp=$(AWS_ACCESS_KEY_ID="${From_Bucket_Access_Key}" AWS_SECRET_ACCESS_KEY="${From_Bucket_Secret_Key}" /usr/local/bin/aws s3 ls "${FPSOURCEFILES[i]}" | wc -l )
 	if [[ "$temp" -gt 0 ]]; 
 	then
     NUMSOURCEFILES=$((NUMSOURCEFILES+1))
@@ -204,7 +209,7 @@ do
 	
 	#AWS_ACCESS_KEY_ID="${To_Bucket_Access_Key}" AWS_SECRET_ACCESS_KEY="${To_Bucket_Secret_Key}" aws s3 cp "/tmp/BashPlayArea2/""${FPSOURCEFILES[i]}" "s3://""${To_Bucket}/""$(date +'%Y_%m_%d')/""${FPDESTINATIONFILES[i]}"
 	
-	temp=$(AWS_ACCESS_KEY_ID="${To_Bucket_Access_Key}" AWS_SECRET_ACCESS_KEY="${To_Bucket_Secret_Key}" aws s3 ls "${FPDESTINATIONFILES[i]}" | wc -l )
+	temp=$(AWS_ACCESS_KEY_ID="${To_Bucket_Access_Key}" AWS_SECRET_ACCESS_KEY="${To_Bucket_Secret_Key}" /usr/local/bin/aws s3 ls "s3://""${To_Bucket}/""${FPDESTINATIONFILES[i]}"  | wc -l )
 	if [[ "$temp" -gt 0 ]]; 
 	then
     NUMDESTINATIONFILES=$((NUMDESTINATIONFILES+1))
@@ -219,7 +224,7 @@ for (( i=0 ;i<${#NUMBACKUPFILES[@]};i++));
 do
 	
 	#AWS_ACCESS_KEY_ID="${To_Bucket_Access_Key}" AWS_SECRET_ACCESS_KEY="${To_Bucket_Secret_Key}" aws s3 cp "/tmp/BashPlayArea2/""${FPSOURCEFILES[i]}" "s3://""${To_Bucket}/""$(date +'%Y_%m_%d')/""${FPDESTINATIONFILES[i]}"
-	temp=$(AWS_ACCESS_KEY_ID="${To_Bucket_Access_Key}" AWS_SECRET_ACCESS_KEY="${To_Bucket_Secret_Key}" aws s3 ls "s3://""${To_Bucket}/""$(date +'%Y_%m_%d')/""${FPDESTINATIONFILES[i]}" | wc -l )
+	temp=$(AWS_ACCESS_KEY_ID="${To_Bucket_Access_Key}" AWS_SECRET_ACCESS_KEY="${To_Bucket_Secret_Key}" /usr/local/bin/aws s3 ls "s3://""${To_Bucket}/""$(date +'%Y_%m_%d')/""${FPDESTINATIONFILES[i]}" | wc -l )
 	if [[ "$temp" -gt 0 ]]; 
 	then
     NUMBACKUPFILES=$((NUMBACKUPFILES+1))
@@ -238,11 +243,15 @@ then
 	for (( i=0 ;i<${#FPDESTINATIONFILES[@]};i++));
 	do
     # log errors where the source file is present but the destination file is not present
-		if ! AWS_ACCESS_KEY_ID="${To_Bucket_Access_Key}" AWS_SECRET_ACCESS_KEY="${To_Bucket_Secret_Key}" aws s3 ls "${FPDESTINATIONFILES[i]}" 2>&1 | grep -q 'NoSuchBucket' 
+		temp1=$(AWS_ACCESS_KEY_ID="${To_Bucket_Access_Key}" AWS_SECRET_ACCESS_KEY="${To_Bucket_Secret_Key}" /usr/local/bin/aws s3 ls "s3://""${To_Bucket}/""${FPDESTINATIONFILES[i]}"  | wc -l )
+	    if [[ "$temp1" -eq 0 ]];
 		then
 		 	echo "The file " "${FPDESTINATIONFILES[i]}" "at the destination directory does not exist" >> DestinationFailureLog.txt
     	fi
-		if ! AWS_ACCESS_KEY_ID="${To_Bucket_Access_Key}" AWS_SECRET_ACCESS_KEY="${To_Bucket_Secret_Key}" aws s3 ls "s3://""${To_Bucket}/""$(date +'%Y_%m_%d')/""${FPDESTINATIONFILES[i]}" 2>&1 | grep -q 'NoSuchBucket'  
+    	
+    	temp1=$(AWS_ACCESS_KEY_ID="${To_Bucket_Access_Key}" AWS_SECRET_ACCESS_KEY="${To_Bucket_Secret_Key}" /usr/local/bin/aws s3 ls "s3://""${To_Bucket}/""$(date +'%Y_%m_%d')/""${FPDESTINATIONFILES[i]}" | wc -l )
+    	
+		if [["$temp2" -eq 0 ]];  
 			then
 			echo "The file ""s3://""${To_Bucket}/""$(date +'%Y_%m_%d')/""${FPDESTINATIONFILES[i]}"" at the backup directory does not exist" >> BackupFailureLog.txt
     	fi
