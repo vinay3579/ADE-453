@@ -1,3 +1,3 @@
 folder3/sample1.txt >> folder1/file1folder1.txt
 folder4/file2folder4.txt >> folder2/folder2_1/file1folder2.txt
-folder4/file2folder5.txt >> folder2/folder2_1/file1folder2.txt  
+folder4/file2folder6.txt >> folder2/folder2_1/file1folder2.txt  
