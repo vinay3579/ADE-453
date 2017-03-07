@@ -1,4 +1,4 @@
 folder3/sample1.txt >> folder10/outputfile1.txt
 folder4/file2folder4.txt >> folde11/folder11_1/outputfile2.txt
 folder4/file2folder4.txt >>
-folder3/sample1.txt >> 
+
